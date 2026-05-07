@@ -1,12 +1,8 @@
 //problem 1 //
-
-
 function filterEvenNumbers(numbers: number[]) {
    return numbers.filter((num) => num % 2 === 0);
 }
 
- const result = filterEvenNumbers([1, 2, 3, 4, 5, 6])
-   console.log(result);
 
    //problem 2//
    
@@ -14,7 +10,7 @@ function filterEvenNumbers(numbers: number[]) {
   return string.split("").reverse().join("");
 }
 
-console.log(reverseString("typescript"));
+
 
 //problem 3 //
 type StringOrNumber = string | number;
@@ -27,8 +23,7 @@ function checkType(value: StringOrNumber): string {
   }
 }
 
-console.log(checkType("Hello")); // "String"
-console.log(checkType(42));       // "Number"
+
 
 //problem 4//
 function getProperty<T, K extends keyof T>(
@@ -38,13 +33,7 @@ function getProperty<T, K extends keyof T>(
   return obj[key];
 }
 
-const user = {
-  id: 1,
-  name: "John Doe",
-  age: 21,
-};
 
-console.log(getProperty(user, "name"));
 
 //problem 5 //
 interface Book {
@@ -60,13 +49,7 @@ function toggleReadStatus(book: Book) {
   };
 }
 
-const myBook = {
-  title: "TypeScript Guide",
-  author: "Jane Doe",
-  publishedYear: 2024,
-};
 
-console.log(toggleReadStatus(myBook));
 
 //problem 6 //
 class Person {
@@ -92,13 +75,8 @@ class Student extends Person {
   }
 }
 
-const student = new Student("Alice", 20, "A");
-
-console.log(student.getDetails());
 
 //problem 7//
 function getIntersection(arr1: number[], arr2: number[]): number[] {
   return arr1.filter((num) => arr2.includes(num));
 }
-
-console.log(getIntersection([1, 2, 3, 4, 5], [3, 4, 5, 6, 7]));

@@ -1,159 +1,94 @@
-# Why `any` Is Called a “Type Safety Hole” and Why `unknown` Is Safer in TypeScript
 
-When I started learning TypeScript, I saw two types that looked almost the same: `any` and `unknown`. At first, I thought both were identical because both can store any kind of value. But after practicing more, I understood there is a big difference between them.
+### Why `any` is Called a "Type Safety Hole" and Why `unknown` is the Safer Choice in TypeScript
 
-In this blog, I will explain:
+TypeScript-এ ডেটা টাইপ নিয়ে কাজ করার সময় `any` এবং `unknown` দুটি খুবই পরিচিত টাইপ। কিন্তু এদের মধ্যে পার্থক্য বোঝা অত্যন্ত গুরুত্বপূর্ণ, বিশেষ করে যখন আপনি unpredictable বা external data (যেমন API response, user input, JSON.parse() ইত্যাদি) নিয়ে কাজ করেন।
 
-* Why `any` is called a “type safety hole”
-* Why `unknown` is safer
-* What type narrowing means in TypeScript
+#### `any` কেন "Type Safety Hole"?
 
----
+`any` হলো TypeScript-এর সবচেয়ে flexible টাইপ। এটি ব্যবহার করলে কম্পাইলার কোনো টাইপ চেকিং করে না। অর্থাৎ:
 
-## What is `any`?
+```ts
+let data: any = JSON.parse(someString);
 
-The `any` type means a variable can contain any kind of value. When we use `any`, TypeScript stops checking types.
-
-Example:
-
-```ts id="w0c5z2"
-let value: any = "Hello";
-
-console.log(value.toUpperCase());
-console.log(value.toFixed(2));
+data.name.toUpperCase();        // কোনো এরর দেখাবে না
+data.callSomeRandomMethod();    // এটাও চলবে
+data * 100;                     // সবকিছুই allowed
 ```
 
-Here TypeScript does not show any error, even though `toFixed()` is only for numbers.
+**সমস্যাগুলো:**
 
-This can create problems during runtime.
+- TypeScript-এর মূল উদ্দেশ্য ছিল **type safety** প্রদান করা — বাগ ধরা কম্পাইল টাইমে।
+- `any` ব্যবহার করলে সেই সুরক্ষা পুরোপুরি চলে যায়। রানটাইমে এরর আসতে পারে যা কম্পাইলার ধরতে পারবে না।
+- একবার `any` ব্যবহার করলে এটি প্রজেক্টের অন্যান্য অংশে ছড়িয়ে পড়তে পারে (type pollution)।
+- অনেক ডেভেলপার এটাকে "escape hatch" হিসেবে ব্যবহার করেন, কিন্তু অতিরিক্ত ব্যবহারে TypeScript-এর সুবিধাই নষ্ট হয়ে যায়।
 
----
+এজন্যই `any` কে **type safety hole** বলা হয়। এটি টাইপ সিস্টেমকে ফাঁকি দেয়।
 
-## Why is `any` Called a “Type Safety Hole”?
+#### `unknown` কেন নিরাপদ?
 
-TypeScript is mainly used to make code safer by checking types before running the program. But when we use `any`, TypeScript cannot protect us anymore.
+`unknown` হলো `any`-এর safer ভার্সন। এটি বলে: “আমি জানি না এই ভ্যালুর টাইপ কী, তাই আমাকে কিছু করার আগে প্রমাণ করো যে তুমি এটাকে সেফলি ব্যবহার করতে পারবে।”
 
-That is why developers call it a:
+**মূল পার্থক্য:**
 
-> “Type Safety Hole”
+- `unknown` এর উপর সরাসরি কোনো অপারেশন করা যায় না।
+- আপনাকে অবশ্যই টাইপ চেক করে নিতে হবে।
 
-Because it creates a hole in TypeScript’s safety system.
+```ts
+let data: unknown = JSON.parse(someString);
 
-Example:
+// data.toUpperCase();     // ❌ Error: Object is of type 'unknown'
 
-```ts id="oq5m8x"
-function printData(data: any) {
-  console.log(data.toUpperCase());
-}
-
-printData(50);
-```
-
-This code will compile successfully, but during runtime it will crash because numbers do not have `toUpperCase()`.
-
-So using `any` too much can make our code unsafe.
-
----
-
-## What is `unknown`?
-
-The `unknown` type is also able to store any value, but it is safer than `any`.
-
-With `unknown`, TypeScript forces us to check the type before using the value.
-
-Example:
-
-```ts id="q2m7dv"
-let value: unknown = "TypeScript";
-
-console.log(value.toUpperCase());
-```
-
-TypeScript will show an error here because it does not know whether the value is actually a string.
-
----
-
-## What is Type Narrowing?
-
-Type narrowing means checking the type of a variable before using it.
-
-After checking, TypeScript understands the specific type.
-
-Example:
-
-```ts id="w9r1tp"
-let value: unknown = "TypeScript";
-
-if (typeof value === "string") {
-  console.log(value.toUpperCase());
+if (typeof data === "string") {
+    console.log(data.toUpperCase());  // এখন সেফ
 }
 ```
 
-Now TypeScript knows that `value` is a string inside the `if` block. So the code becomes safe.
+#### Type Narrowing কী?
 
-This process is called type narrowing.
+**Type Narrowing** হলো TypeScript-এর একটি শক্তিশালী ফিচার যার মাধ্যমে আপনি একটি ব্রড টাইপকে (যেমন `unknown`) আরও নির্দিষ্ট টাইপে (string, number, object ইত্যাদি) রূপান্তর করেন।
 
----
+**সাধারণ Narrowing টেকনিকস:**
 
-## Common Ways of Type Narrowing
+1. **typeof চেক**
+   ```ts
+   if (typeof data === "string") { ... }
+   if (typeof data === "number") { ... }
+   ```
 
-### Using `typeof`
+2. **instanceof চেক**
+   ```ts
+   if (data instanceof Date) { ... }
+   ```
 
-```ts id="g4z7nc"
-let age: unknown = 20;
+3. **Type Guard ফাংশন**
+   ```ts
+   function isUser(obj: unknown): obj is { name: string; age: number } {
+       return typeof obj === "object" 
+           && obj !== null 
+           && "name" in obj 
+           && "age" in obj;
+   }
 
-if (typeof age === "number") {
-  console.log(age.toFixed(2));
-}
-```
+   if (isUser(data)) {
+       console.log(data.name);  // এখন টাইপসেফ
+   }
+   ```
 
----
+4. **Type Assertion** (শেষ অপশন হিসেবে)
+   ```ts
+   const user = data as { name: string };
+   ```
 
-### Using `instanceof`
+#### কখন কোনটা ব্যবহার করবেন?
 
-```ts id="x8b3ke"
-let dateValue: unknown = new Date();
+- **খুবই কম ক্ষেত্রে** `any` ব্যবহার করুন — শুধুমাত্র যখন আপনি পুরোপুরি নিশ্চিত যে টাইপ চেকিং বন্ধ করতেই হবে (third-party লাইব্রেরির খারাপ টাইপ ডেফিনিশন ইত্যাদি)।
+- বেশিরভাগ ক্ষেত্রে **`unknown`** ব্যবহার করুন, বিশেষ করে external data, API রেসপন্স, বা কনফিগারেশন ফাইল নিয়ে কাজ করার সময়।
+- `unknown` + proper type narrowing = সত্যিকারের robust ও maintainable কোড।
 
-if (dateValue instanceof Date) {
-  console.log(dateValue.getFullYear());
-}
-```
+#### উপসংহার
 
----
+`any` আপনাকে দ্রুত কোড লিখতে সাহায্য করে, কিন্তু দীর্ঘমেয়াদে এটি আপনার প্রজেক্টকে দুর্বল করে। `unknown` একটু বেশি কাজ দেয় (narrowing করতে হয়), কিন্তু এটি আপনাকে TypeScript-এর আসল শক্তি — **compile-time safety** — উপভোগ করতে দেয়।
 
-### Using `in` Operator
+**স্লোগান মনে রাখুন:**  
+*"Use `unknown` by default. Use `any` only when you know better."*
 
-```ts id="b6m2qj"
-type User = {
-  name: string;
-};
-
-type Admin = {
-  role: string;
-};
-
-function printInfo(person: User | Admin) {
-  if ("name" in person) {
-    console.log(person.name);
-  } else {
-    console.log(person.role);
-  }
-}
-```
-
----
-
-## Difference Between `any` and `unknown`
-
-| `any`                           | `unknown`                    |
-| ------------------------------- | ---------------------------- |
-| Disables type checking          | Keeps type safety            |
-| Unsafe                          | Safer                        |
-| Can cause runtime errors easily | Requires checking before use |
-| Easy to misuse                  | Better for secure coding     |
-
----
-
-## Conclusion
-
-From my learning experience, I think `unknown` is much better than `any` in most cases. Although `any` is easier to use, it removes TypeScript’s safety features. On the other hand, `unknown` helps us write safer and cleaner code by forcing type checks.
